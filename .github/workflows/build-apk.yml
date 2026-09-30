@@ -1,0 +1,104 @@
+name: Build StreamX APKs (Debug & Release)
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build Android APKs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Setup Keystores for Release & Debug
+        run: |
+          mkdir -p keystore
+          # If no custom release key provided, generate a valid key so assembleRelease signs cleanly
+          if [ ! -f my-upload-key.jks ]; then
+            echo "Generating release signing key..."
+            keytool -genkey -v -keystore my-upload-key.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass uploadpass -keypass uploadpass -dname "CN=StreamX, OU=Mobile, O=StreamX, L=SanFrancisco, S=CA, C=US"
+            echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/my-upload-key.jks" >> $GITHUB_ENV
+            echo "STORE_PASSWORD=uploadpass" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=uploadpass" >> $GITHUB_ENV
+          fi
+
+          # Ensure debug.keystore is present
+          if [ ! -f debug.keystore ] && [ -f debug.keystore.base64 ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+          elif [ ! -f debug.keystore ]; then
+            keytool -genkey -v -keystore debug.keystore -alias androiddebugkey -keyalg RSA -keysize 2048 -validity 10000 -storepass android -keypass android -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Make Gradlew Executable
+        run: |
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+          else
+            gradle wrapper
+            chmod +x gradlew
+          fi
+
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Build Release APK
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        env:
+          KEYSTORE_PATH: ${{ env.KEYSTORE_PATH || '$GITHUB_WORKSPACE/my-upload-key.jks' }}
+          STORE_PASSWORD: ${{ env.STORE_PASSWORD || 'uploadpass' }}
+          KEY_PASSWORD: ${{ env.KEY_PASSWORD || 'uploadpass' }}
+
+      - name: Organize Output APKs
+        run: |
+          mkdir -p build-apks
+          # Find and copy Debug APK
+          DEBUG_APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          if [ -f "$DEBUG_APK" ]; then
+            cp "$DEBUG_APK" build-apks/StreamX-debug.apk
+            echo "Copied $DEBUG_APK to build-apks/StreamX-debug.apk"
+          fi
+
+          # Find and copy Release APK
+          RELEASE_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -f "$RELEASE_APK" ]; then
+            cp "$RELEASE_APK" build-apks/StreamX-release.apk
+            echo "Copied $RELEASE_APK to build-apks/StreamX-release.apk"
+          fi
+
+          ls -lh build-apks/
+
+      - name: Upload Both APKs as GitHub Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: StreamX-APKs
+          path: build-apks/*.apk
+          retention-days: 30
+
+      - name: Create GitHub Release (On Tag Push)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build-apks/*.apk
+          title: "StreamX Release ${{ github.ref_name }}"
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

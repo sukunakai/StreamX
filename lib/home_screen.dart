@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -23,8 +24,8 @@ class _HomeScreenState extends State<HomeScreen> {
     'Sci-Fi',
     'Anime',
     'Trending',
-    'Drama',
     'Cyberpunk',
+    '4K Ultra',
   ];
 
   @override
@@ -39,152 +40,72 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: const Color(0xFF0A0A0F),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        titleSpacing: 20,
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: const Color(0xFF00F0FF).withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: const Color(0xFF00F0FF), width: 1.0),
-          ),
-          child: const Text(
-            'STREAMX',
-            style: TextStyle(
-              color: Color(0xFF00F0FF),
-              fontWeight: FontWeight.w900,
-              fontSize: 15,
-              letterSpacing: 2.2,
-            ),
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(LucideIcons.bell, color: Colors.white, size: 20),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Notifications: 4K HDR releases refreshed today!'),
-                  backgroundColor: Color(0xFF14141E),
-                ),
-              );
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       body: movieProvider.isLoading
           ? const _HomeShimmerSkeleton()
-          : RefreshIndicator(
-              color: const Color(0xFF00F0FF),
-              backgroundColor: const Color(0xFF14141E),
-              onRefresh: () async {
-                await Future.delayed(const Duration(milliseconds: 600));
-              },
-              child: ListView(
-                padding: EdgeInsets.zero,
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  // 1. TOP CATEGORIES ROW: Instantly below AppBar & completely ABOVE Hero Image
-                  SafeArea(
-                    bottom: false,
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 4, bottom: 12),
-                      height: 36,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: _categories.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
-                        itemBuilder: (context, index) {
-                          final cat = _categories[index];
-                          final isSelected = cat == _selectedCategory;
-                          return InkWell(
-                            onTap: () => setState(() => _selectedCategory = cat),
-                            borderRadius: BorderRadius.circular(18),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? const Color(0xFF00F0FF)
-                                    : const Color(0xFF14141E).withValues(alpha: 0.85),
-                                borderRadius: BorderRadius.circular(18),
-                                border: Border.all(
-                                  color: isSelected
-                                      ? const Color(0xFF00F0FF)
-                                      : const Color(0xFF262638),
-                                  width: 0.8,
-                                ),
-                                boxShadow: isSelected
-                                    ? [
-                                        BoxShadow(
-                                          color: const Color(0xFF00F0FF).withValues(alpha: 0.25),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ]
-                                    : null,
+          : Stack(
+              children: [
+                // Scrollable Content
+                RefreshIndicator(
+                  color: const Color(0xFF00F0FF),
+                  backgroundColor: const Color(0xFF14141E),
+                  onRefresh: () async {
+                    await Future.delayed(const Duration(milliseconds: 600));
+                  },
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      // Full-Bleed Immersive Cinema Hero Section
+                      if (heroMovie != null)
+                        _ImmersiveHeroHeader(
+                          heroMovie: heroMovie,
+                          isSaved: isSaved,
+                          onToggleMyList: () {
+                            movieProvider.toggleMyList(heroMovie.id, authProvider.email);
+                          },
+                          onPlay: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PlayerScreen(movie: heroMovie),
                               ),
-                              child: Center(
-                                child: Text(
-                                  cat,
-                                  style: TextStyle(
-                                    color: isSelected ? Colors.black : Colors.white.withValues(alpha: 0.85),
-                                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                                    fontSize: 12,
-                                    letterSpacing: 0.3,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
+
+                      const SizedBox(height: 24),
+
+                      // Trending Movies Section
+                      _MovieSectionRow(
+                        title: 'Trending Worldwide',
+                        movies: _filterMovies(movies, _selectedCategory),
                       ),
-                    ),
+
+                      const SizedBox(height: 32),
+
+                      // New Releases Section
+                      _MovieSectionRow(
+                        title: 'New Releases',
+                        movies: _filterMovies(movies.reversed.toList(), _selectedCategory),
+                      ),
+
+                      const SizedBox(height: 100),
+                    ],
                   ),
+                ),
 
-                  // 2. EDGE-TO-EDGE HERO IMAGE SECTION
-                  if (heroMovie != null)
-                    _EdgeToEdgeHeroSection(
-                      heroMovie: heroMovie,
-                      isSaved: isSaved,
-                      onToggleMyList: () {
-                        movieProvider.toggleMyList(heroMovie.id, authProvider.email);
-                      },
-                      onPlay: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => PlayerScreen(movie: heroMovie),
-                          ),
-                        );
-                      },
-                    ),
-
-                  const SizedBox(height: 28),
-
-                  // 4. CLEANER ROWS: Trending Worldwide
-                  _MovieSectionRow(
-                    title: 'Trending Worldwide',
-                    movies: _filterMovies(movies, _selectedCategory),
+                // Floating Frosted Header (Apple TV / Netflix Style)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _FloatingPremiumHeader(
+                    categories: _categories,
+                    selectedCategory: _selectedCategory,
+                    onSelectCategory: (cat) => setState(() => _selectedCategory = cat),
                   ),
-
-                  const SizedBox(height: 32),
-
-                  // 4. CLEANER ROWS: New Releases
-                  _MovieSectionRow(
-                    title: 'New Releases',
-                    movies: _filterMovies(movies.reversed.toList(), _selectedCategory),
-                  ),
-
-                  const SizedBox(height: 48),
-                ],
-              ),
+                ),
+              ],
             ),
     );
   }
@@ -197,16 +118,253 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // -------------------------------------------------------------
-// EDGE-TO-EDGE HERO IMAGE COMPONENT (Apple TV / Netflix style)
+// FLOATING FROSTED HEADER (Logo, Actions & Glassmorphic Category Pills)
 // -------------------------------------------------------------
 
-class _EdgeToEdgeHeroSection extends StatelessWidget {
+class _FloatingPremiumHeader extends StatelessWidget {
+  final List<String> categories;
+  final String selectedCategory;
+  final ValueChanged<String> onSelectCategory;
+
+  const _FloatingPremiumHeader({
+    required this.categories,
+    required this.selectedCategory,
+    required this.onSelectCategory,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            const Color(0xFF0A0A0F).withValues(alpha: 0.95),
+            const Color(0xFF0A0A0F).withValues(alpha: 0.75),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.6, 1.0],
+        ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Top Bar: Clean Cinematic Branding + Action Buttons
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Premium Brand Typography (No ugly box outline)
+                  Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF00F0FF), Color(0xFF0072FF)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF00F0FF).withValues(alpha: 0.45),
+                              blurRadius: 14,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          LucideIcons.play,
+                          color: Colors.black,
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      RichText(
+                        text: const TextSpan(
+                          children: [
+                            TextSpan(
+                              text: 'STREAM',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2.0,
+                              ),
+                            ),
+                            TextSpan(
+                              text: 'X',
+                              style: TextStyle(
+                                color: Color(0xFF00F0FF),
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Circular Glass Action Buttons
+                  Row(
+                    children: [
+                      _GlassIconButton(
+                        icon: LucideIcons.bell,
+                        hasBadge: true,
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Notifications: 4K HDR releases refreshed!'),
+                              backgroundColor: Color(0xFF14141E),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            // Ultra-Sleek Frosted Glass Category Pills
+            SizedBox(
+              height: 36,
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: categories.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final cat = categories[index];
+                  final isSelected = cat == selectedCategory;
+
+                  return InkWell(
+                    onTap: () => onSelectCategory(cat),
+                    borderRadius: BorderRadius.circular(18),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 220),
+                      curve: Curves.easeOutCubic,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? const Color(0xFF00F0FF)
+                            : Colors.black.withValues(alpha: 0.4),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: isSelected
+                              ? const Color(0xFF00F0FF)
+                              : Colors.white.withValues(alpha: 0.18),
+                          width: isSelected ? 1.2 : 0.8,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF00F0FF).withValues(alpha: 0.35),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Center(
+                        child: Text(
+                          cat,
+                          style: TextStyle(
+                            color: isSelected ? Colors.black : Colors.white.withValues(alpha: 0.9),
+                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                            fontSize: 12,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 10),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassIconButton extends StatelessWidget {
+  final IconData icon;
+  final bool hasBadge;
+  final VoidCallback onTap;
+
+  const _GlassIconButton({
+    required this.icon,
+    this.hasBadge = false,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.white.withValues(alpha: 0.1),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15),
+                width: 0.8,
+              ),
+            ),
+            child: Icon(icon, color: Colors.white, size: 16),
+          ),
+          if (hasBadge)
+            Positioned(
+              top: 2,
+              right: 2,
+              child: Container(
+                width: 7,
+                height: 7,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Color(0xFF00F0FF),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// -------------------------------------------------------------
+// IMMERSIVE FULL-BLEED HERO SECTION (Apple TV / Netflix Style)
+// -------------------------------------------------------------
+
+class _ImmersiveHeroHeader extends StatelessWidget {
   final MovieItem heroMovie;
   final bool isSaved;
   final VoidCallback onToggleMyList;
   final VoidCallback onPlay;
 
-  const _EdgeToEdgeHeroSection({
+  const _ImmersiveHeroHeader({
     required this.heroMovie,
     required this.isSaved,
     required this.onToggleMyList,
@@ -215,13 +373,16 @@ class _EdgeToEdgeHeroSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final heroHeight = (screenHeight * 0.62).clamp(480.0, 560.0);
+
     return SizedBox(
-      height: 470,
+      height: heroHeight,
       width: double.infinity,
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Edge-to-Edge Poster Image
+          // Edge-to-Edge Full-Bleed Artwork
           CachedNetworkImage(
             imageUrl: heroMovie.bannerUrl,
             fit: BoxFit.cover,
@@ -233,128 +394,184 @@ class _EdgeToEdgeHeroSection extends StatelessWidget {
             ),
           ),
 
-          // Multi-layer cinema vignette: top subtle shade & smooth gradient seamlessly fading into 0xFF0A0A0F
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    const Color(0xFF0A0A0F).withValues(alpha: 0.35),
-                    Colors.transparent,
-                    const Color(0xFF0A0A0F).withValues(alpha: 0.4),
-                    const Color(0xFF0A0A0F).withValues(alpha: 0.85),
-                    const Color(0xFF0A0A0F),
-                  ],
-                  stops: const [0.0, 0.22, 0.55, 0.82, 1.0],
-                ),
+          // Multi-layer Cinema Vignettes (Seamless bottom transition into 0xFF0A0A0F)
+          DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  const Color(0xFF0A0A0F).withValues(alpha: 0.7),
+                  Colors.transparent,
+                  Colors.transparent,
+                  const Color(0xFF0A0A0F).withValues(alpha: 0.5),
+                  const Color(0xFF0A0A0F).withValues(alpha: 0.9),
+                  const Color(0xFF0A0A0F),
+                ],
+                stops: const [0.0, 0.22, 0.45, 0.70, 0.88, 1.0],
               ),
             ),
           ),
 
-          // Hero Details & Sleek Buttons
+          // Bottom Content: Badges, Title, Metadata & Sleek Action Buttons
           Positioned(
             left: 20,
             right: 20,
-            bottom: 12,
+            bottom: 8,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Tag & IMDB Badge
+                // Cinema Series / Feature Badge
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF00F0FF).withValues(alpha: 0.18),
+                        color: const Color(0xFF00F0FF).withValues(alpha: 0.16),
                         borderRadius: BorderRadius.circular(4),
-                        border: Border.all(color: const Color(0xFF00F0FF), width: 0.8),
-                      ),
-                      child: Text(
-                        heroMovie.category.toUpperCase(),
-                        style: const TextStyle(
-                          color: Color(0xFF00F0FF),
-                          fontWeight: FontWeight.w800,
-                          fontSize: 10,
-                          letterSpacing: 1.2,
+                        border: Border.all(
+                          color: const Color(0xFF00F0FF).withValues(alpha: 0.8),
+                          width: 0.8,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Icon(LucideIcons.star, color: Color(0xFFFFB800), size: 13),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${heroMovie.rating} IMDB',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '·  ${heroMovie.releaseYear}  ·  Ultra 4K',
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 11,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(LucideIcons.sparkles, color: Color(0xFF00F0FF), size: 10),
+                          const SizedBox(width: 4),
+                          Text(
+                            'STREAMX ORIGINAL · ${heroMovie.category.toUpperCase()}',
+                            style: const TextStyle(
+                              color: Color(0xFF00F0FF),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 9.5,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
-                // Title
+                // Main Cinematic Title
                 Text(
                   heroMovie.title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 26,
+                    fontSize: 28,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: -0.3,
-                    height: 1.15,
+                    letterSpacing: -0.5,
+                    height: 1.12,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black87,
+                        blurRadius: 18,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 6),
 
-                // Description
+                // Metadata Details: Rating, Year, 4K HDR, Dolby
+                Row(
+                  children: [
+                    const Icon(LucideIcons.star, color: Color(0xFFFFB800), size: 13),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${heroMovie.rating}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: const Text(
+                        '4K ULTRA HD',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      child: const Text(
+                        'DOLBY ATMOS',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${heroMovie.releaseYear}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Plot Synopsis
                 Text(
                   heroMovie.description,
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.72),
-                    fontSize: 12.5,
+                    fontSize: 12,
                     height: 1.35,
+                    shadows: const [
+                      Shadow(color: Colors.black54, blurRadius: 10),
+                    ],
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 16),
 
-                // 3. SLEEKER, SMALLER, PREMIUM BUTTON STYLING (No chunky blocky look)
+                // Sleek, Minimalist Action Buttons (Apple TV / Netflix Style)
                 Row(
                   children: [
-                    // Sleek Watch Now Button
+                    // Primary Play Button: Crisp, elegant white pill with black icon & text
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: onPlay,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(22),
                         child: Ink(
-                          height: 38,
-                          padding: const EdgeInsets.symmetric(horizontal: 18),
+                          height: 40,
+                          padding: const EdgeInsets.symmetric(horizontal: 22),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFF00F0FF), Color(0xFF00B4D8)],
-                              begin: Alignment.centerLeft,
-                              end: Alignment.centerRight,
-                            ),
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(22),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF00F0FF).withValues(alpha: 0.35),
+                                color: Colors.white.withValues(alpha: 0.25),
                                 blurRadius: 14,
                                 offset: const Offset(0, 3),
                               ),
@@ -364,14 +581,14 @@ class _EdgeToEdgeHeroSection extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(LucideIcons.play, color: Colors.black, size: 16),
-                              SizedBox(width: 6),
+                              SizedBox(width: 8),
                               Text(
-                                'Watch Now',
+                                'Play Now',
                                 style: TextStyle(
                                   color: Colors.black,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 13,
-                                  letterSpacing: 0.2,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 13.5,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
                             ],
@@ -381,23 +598,23 @@ class _EdgeToEdgeHeroSection extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
 
-                    // Sleek Translucent My List Button
+                    // Secondary My List Button: Frosted Glass Pill
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: onToggleMyList,
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(22),
                         child: Container(
-                          height: 38,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          height: 40,
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF14141E).withValues(alpha: 0.7),
-                            borderRadius: BorderRadius.circular(20),
+                            color: Colors.white.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(22),
                             border: Border.all(
                               color: isSaved
                                   ? const Color(0xFF00F0FF)
                                   : Colors.white.withValues(alpha: 0.25),
-                              width: 0.9,
+                              width: 1.0,
                             ),
                           ),
                           child: Row(
@@ -408,13 +625,14 @@ class _EdgeToEdgeHeroSection extends StatelessWidget {
                                 color: isSaved ? const Color(0xFF00F0FF) : Colors.white,
                                 size: 15,
                               ),
-                              const SizedBox(width: 6),
+                              const SizedBox(width: 7),
                               Text(
                                 isSaved ? 'In List' : 'My List',
                                 style: TextStyle(
                                   color: isSaved ? const Color(0xFF00F0FF) : Colors.white,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w700,
                                   fontSize: 13,
+                                  letterSpacing: 0.2,
                                 ),
                               ),
                             ],
@@ -434,7 +652,7 @@ class _EdgeToEdgeHeroSection extends StatelessWidget {
 }
 
 // -------------------------------------------------------------
-// CLEANER ROWS WITH SUBTLE BORDER RADIUS & AMPLE MARGINS
+// CLEANER ROWS: MOVIE SECTION
 // -------------------------------------------------------------
 
 class _MovieSectionRow extends StatelessWidget {
@@ -451,7 +669,7 @@ class _MovieSectionRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Header with generous horizontal padding & clean margin
+        // Section Header with proper typography and spacing
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
@@ -478,7 +696,6 @@ class _MovieSectionRow extends StatelessWidget {
             ],
           ),
         ),
-        // Proper spacing between title and cards
         const SizedBox(height: 14),
         SizedBox(
           height: 205,
@@ -604,30 +821,8 @@ class _HomeShimmerSkeleton extends StatelessWidget {
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
-          SafeArea(
-            bottom: false,
-            child: Container(
-              margin: const EdgeInsets.only(top: 8, bottom: 12),
-              height: 34,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: List.generate(
-                  4,
-                  (index) => Container(
-                    margin: const EdgeInsets.only(right: 8),
-                    width: 70,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(17),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
           Container(
-            height: 420,
+            height: 480,
             width: double.infinity,
             color: Colors.white,
           ),

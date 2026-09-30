@@ -170,16 +170,15 @@ fun StreamXMainApp(repository: MovieRepository) {
             }
         ) { innerPadding ->
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+                modifier = Modifier.fillMaxSize()
             ) {
                 when (currentTab) {
                     0 -> HomeScreen(
                         movies = movies,
                         watchlistIds = watchlistIds,
                         onToggleWatchlist = { id -> repository.toggleWatchlist(id) },
-                        onSelectMovie = { movie -> selectedPlayerMovie = movie }
+                        onSelectMovie = { movie -> selectedPlayerMovie = movie },
+                        modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
                     )
                     1 -> SearchScreen(
                         movies = movies,
@@ -187,19 +186,22 @@ fun StreamXMainApp(repository: MovieRepository) {
                         onAddRecentSearch = { q -> repository.addRecentSearch(q) },
                         onRemoveRecentSearch = { q -> repository.removeRecentSearch(q) },
                         onClearRecentSearches = { repository.clearRecentSearches() },
-                        onSelectMovie = { movie -> selectedPlayerMovie = movie }
+                        onSelectMovie = { movie -> selectedPlayerMovie = movie },
+                        modifier = Modifier.padding(innerPadding)
                     )
                     2 -> DownloadsScreen(
                         downloads = downloads,
                         onDeleteDownload = { id -> repository.removeDownload(id) },
-                        onPlayDownloaded = { movie -> selectedPlayerMovie = movie }
+                        onPlayDownloaded = { movie -> selectedPlayerMovie = movie },
+                        modifier = Modifier.padding(innerPadding)
                     )
                     3 -> ProfileScreen(
                         userEmail = userEmail,
                         displayName = displayName,
                         onUpdateDisplayName = { name -> repository.setDisplayName(name) },
                         onSwitchEmail = { email -> repository.setUserEmail(email) },
-                        onOpenCreatorStudio = { showCreatorStudio = true }
+                        onOpenCreatorStudio = { showCreatorStudio = true },
+                        modifier = Modifier.padding(innerPadding)
                     )
                 }
             }

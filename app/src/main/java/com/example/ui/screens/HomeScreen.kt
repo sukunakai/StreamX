@@ -15,27 +15,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PlusOne
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -63,7 +59,6 @@ import com.example.ui.theme.NeonCyan
 import com.example.ui.theme.StarGold
 import com.example.ui.theme.SubtitleGrey
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     movies: List<MovieItem>,
@@ -74,7 +69,7 @@ fun HomeScreen(
 ) {
     var selectedCategory by remember { mutableStateOf("All") }
     val categories = remember {
-        listOf("All", "Action", "Sci-Fi", "Anime", "Cyberpunk", "Trending")
+        listOf("All", "Action", "Sci-Fi", "Anime", "Cyberpunk", "Trending", "4K Ultra")
     }
 
     val heroMovie = movies.firstOrNull()
@@ -84,110 +79,41 @@ fun HomeScreen(
         else movies.filter { it.category.equals(selectedCategory, ignoreCase = true) }.ifEmpty { movies }
     }
 
-    Column(
+    Box(
         modifier = modifier
             .fillMaxSize()
             .background(DeepSpaceBlack)
     ) {
-        // App Bar: Logo Text (STREAMX), Notification Bell (NO CAST ICON)
-        TopAppBar(
-            title = {
-                Surface(
-                    color = NeonCyan.copy(alpha = 0.12f),
-                    shape = RoundedCornerShape(6.dp),
-                    border = BorderStroke(1.dp, NeonCyan)
-                ) {
-                    Text(
-                        text = "STREAMX",
-                        color = NeonCyan,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 2.2.sp,
-                        fontSize = 15.sp,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                    )
-                }
-            },
-            actions = {
-                IconButton(onClick = {}) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = "Notifications",
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = DeepSpaceBlack,
-                titleContentColor = Color.White
-            )
-        )
-
-        // 1. TOP CATEGORIES: Instantly below the AppBar, completely ABOVE Hero Image
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 18.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(bottom = 8.dp)
-        ) {
-            items(categories) { cat ->
-                val isSelected = cat == selectedCategory
-                val bgCol by animateColorAsState(
-                    if (isSelected) NeonCyan else DarkBlueGrey.copy(alpha = 0.85f),
-                    label = "pill_color"
-                )
-                val textCol by animateColorAsState(
-                    if (isSelected) Color.Black else Color.White.copy(alpha = 0.85f),
-                    label = "pill_text"
-                )
-                Surface(
-                    shape = RoundedCornerShape(18.dp),
-                    color = bgCol,
-                    border = BorderStroke(
-                        0.8.dp,
-                        if (isSelected) NeonCyan else Color(0xFF262638)
-                    ),
-                    modifier = Modifier.clickable { selectedCategory = cat }
-                ) {
-                    Text(
-                        text = cat,
-                        color = textCol,
-                        fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
-                        fontSize = 12.sp,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp)
-                    )
-                }
-            }
-        }
-
+        // Scrollable content starting at 0dp (under the floating header)
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 36.dp)
         ) {
-            // 2. EDGE-TO-EDGE HERO IMAGE SECTION
+            // Full-Bleed Cinema Hero Image
             if (heroMovie != null) {
                 item {
                     val isSaved = watchlistIds.contains(heroMovie.id)
-                    EdgeToEdgeHeroSection(
+                    ImmersiveHeroSection(
                         movie = heroMovie,
                         isSaved = isSaved,
                         onToggleWatchlist = { onToggleWatchlist(heroMovie.id) },
                         onPlay = { onSelectMovie(heroMovie) }
                     )
-                    Spacer(modifier = Modifier.height(28.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
 
-            // 4. CLEANER ROWS: Trending Worldwide
+            // Cleaner Rows: Trending Worldwide
             item {
                 MovieRowSection(
                     title = "Trending Worldwide",
                     movies = filteredMovies,
                     onSelectMovie = onSelectMovie
                 )
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(30.dp))
             }
 
-            // 4. CLEANER ROWS: New Releases
+            // Cleaner Rows: New Releases
             item {
                 MovieRowSection(
                     title = "New Releases",
@@ -196,11 +122,164 @@ fun HomeScreen(
                 )
             }
         }
+
+        // Floating Frosted Header (Apple TV / Netflix style)
+        FloatingHeaderOverlay(
+            categories = categories,
+            selectedCategory = selectedCategory,
+            onSelectCategory = { selectedCategory = it }
+        )
     }
 }
 
 @Composable
-fun EdgeToEdgeHeroSection(
+fun FloatingHeaderOverlay(
+    categories: List<String>,
+    selectedCategory: String,
+    onSelectCategory: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        DeepSpaceBlack.copy(alpha = 0.95f),
+                        DeepSpaceBlack.copy(alpha = 0.70f),
+                        Color.Transparent
+                    ),
+                    startY = 0f,
+                    endY = 320f
+                )
+            )
+            .statusBarsPadding()
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // Branding & Action Bar (Clean, premium logo without ugly box)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Logo: Glowing gradient emblem + STREAM in White + X in Radiant Cyan
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .shadow(12.dp, CircleShape, spotColor = NeonCyan)
+                            .background(
+                                Brush.linearGradient(listOf(NeonCyan, ElectricBlue)),
+                                CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = null,
+                            tint = Color.Black,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "STREAM",
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 2.sp
+                        )
+                        Text(
+                            text = "X",
+                            color = NeonCyan,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 2.sp
+                        )
+                    }
+                }
+
+                // Circular Glass Notification Button
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.12f))
+                        .clickable {},
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = "Notifications",
+                        tint = Color.White,
+                        modifier = Modifier.size(17.dp)
+                    )
+                    // Notification dot
+                    Box(
+                        modifier = Modifier
+                            .size(7.dp)
+                            .align(Alignment.TopEnd)
+                            .padding(top = 4.dp, end = 4.dp)
+                            .background(NeonCyan, CircleShape)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Frosted Glass Category Pills Row
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(bottom = 12.dp)
+            ) {
+                items(categories) { cat ->
+                    val isSelected = cat == selectedCategory
+                    val bgCol by animateColorAsState(
+                        if (isSelected) NeonCyan else Color.Black.copy(alpha = 0.45f),
+                        label = "pill_bg"
+                    )
+                    val textCol by animateColorAsState(
+                        if (isSelected) Color.Black else Color.White.copy(alpha = 0.9f),
+                        label = "pill_text"
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(18.dp),
+                        color = bgCol,
+                        border = BorderStroke(
+                            if (isSelected) 1.2.dp else 0.8.dp,
+                            if (isSelected) NeonCyan else Color.White.copy(alpha = 0.2f)
+                        ),
+                        modifier = Modifier
+                            .then(
+                                if (isSelected) Modifier.shadow(10.dp, RoundedCornerShape(18.dp), spotColor = NeonCyan)
+                                else Modifier
+                            )
+                            .clickable { onSelectCategory(cat) }
+                    ) {
+                        Text(
+                            text = cat,
+                            color = textCol,
+                            fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                            letterSpacing = 0.4.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ImmersiveHeroSection(
     movie: MovieItem,
     isSaved: Boolean,
     onToggleWatchlist: () -> Unit,
@@ -209,13 +288,13 @@ fun EdgeToEdgeHeroSection(
 ) {
     val context = LocalContext.current
 
-    // Edge-to-edge: no horizontal margin/padding
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(470.dp)
+            .height(520.dp)
             .background(DarkBlueGrey)
     ) {
+        // Full bleed background art
         AsyncImage(
             model = ImageRequest.Builder(context)
                 .data(movie.bannerUrl)
@@ -226,17 +305,18 @@ fun EdgeToEdgeHeroSection(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Smooth cinematic multi-stop gradient seamlessly fading into DeepSpaceBlack (0xFF0A0A0F)
+        // Seamless multi-layer cinema gradient
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            DeepSpaceBlack.copy(alpha = 0.35f),
+                            DeepSpaceBlack.copy(alpha = 0.75f),
                             Color.Transparent,
-                            DeepSpaceBlack.copy(alpha = 0.45f),
-                            DeepSpaceBlack.copy(alpha = 0.85f),
+                            Color.Transparent,
+                            DeepSpaceBlack.copy(alpha = 0.5f),
+                            DeepSpaceBlack.copy(alpha = 0.92f),
                             DeepSpaceBlack
                         ),
                         startY = 0f,
@@ -245,29 +325,57 @@ fun EdgeToEdgeHeroSection(
                 )
         )
 
-        // Hero Content Details & Sleek Buttons
+        // Hero Details & Sleek Action Buttons
         Column(
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(horizontal = 20.dp, vertical = 12.dp)
         ) {
-            // Badges
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Surface(
-                    color = NeonCyan.copy(alpha = 0.18f),
-                    shape = RoundedCornerShape(4.dp),
-                    border = BorderStroke(0.8.dp, NeonCyan)
+            // STREAMX ORIGINAL Tag
+            Surface(
+                color = NeonCyan.copy(alpha = 0.18f),
+                shape = RoundedCornerShape(4.dp),
+                border = BorderStroke(0.8.dp, NeonCyan.copy(alpha = 0.8f))
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        tint = NeonCyan,
+                        modifier = Modifier.size(10.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = movie.category.uppercase(),
+                        text = "STREAMX ORIGINAL · ${movie.category.uppercase()}",
                         color = NeonCyan,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = 1.2.sp,
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp)
+                        letterSpacing = 1.2.sp
                     )
                 }
-                Spacer(modifier = Modifier.width(8.dp))
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Cinematic Title
+            Text(
+                text = movie.title,
+                color = Color.White,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = (-0.5).sp,
+                lineHeight = 32.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Metadata Row: Rating, Badges, Year
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
@@ -276,62 +384,75 @@ fun EdgeToEdgeHeroSection(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "${movie.rating} IMDB",
+                    text = "${movie.rating}",
                     color = Color.White,
                     fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Bold
                 )
+                Spacer(modifier = Modifier.width(10.dp))
+                Surface(
+                    color = Color.White.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(3.dp)
+                ) {
+                    Text(
+                        text = "4K ULTRA HD",
+                        color = Color.White,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.6.sp,
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(6.dp))
+                Surface(
+                    color = Color.White.copy(alpha = 0.15f),
+                    shape = RoundedCornerShape(3.dp)
+                ) {
+                    Text(
+                        text = "DOLBY ATMOS",
+                        color = Color.White,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.6.sp,
+                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "·  ${movie.releaseYear}  ·  Ultra 4K",
+                    text = "${movie.releaseYear}",
                     color = Color.White.copy(alpha = 0.6f),
-                    fontSize = 11.sp
+                    fontSize = 11.5.sp,
+                    fontWeight = FontWeight.Medium
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Title
-            Text(
-                text = movie.title,
-                color = Color.White,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-0.3).sp,
-                lineHeight = 30.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Description
+            // Plot Description
             Text(
                 text = movie.description,
                 color = Color.White.copy(alpha = 0.72f),
-                fontSize = 12.5.sp,
-                lineHeight = 17.sp,
+                fontSize = 12.sp,
+                lineHeight = 16.5.sp,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
+
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 3. SLEEKER, SMALLER, REFINED BUTTON STYLING (Apple TV / Netflix style)
+            // Apple TV / Netflix signature button row
             Row(verticalAlignment = Alignment.CenterVertically) {
-                // Sleek "Watch Now" Button
+                // Primary "Play Now" Button (Crisp White Pill)
                 Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = NeonCyan,
+                    shape = RoundedCornerShape(22.dp),
+                    color = Color.White,
                     modifier = Modifier
-                        .height(38.dp)
-                        .shadow(12.dp, RoundedCornerShape(20.dp), spotColor = NeonCyan)
+                        .height(40.dp)
+                        .shadow(12.dp, RoundedCornerShape(22.dp), spotColor = Color.White.copy(alpha = 0.35f))
                         .clickable { onPlay() }
                 ) {
                     Row(
-                        modifier = Modifier
-                            .background(
-                                Brush.horizontalGradient(listOf(NeonCyan, ElectricBlue))
-                            )
-                            .padding(horizontal = 18.dp),
+                        modifier = Modifier.padding(horizontal = 22.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -340,33 +461,33 @@ fun EdgeToEdgeHeroSection(
                             tint = Color.Black,
                             modifier = Modifier.size(16.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Watch Now",
+                            text = "Play Now",
                             color = Color.Black,
-                            fontWeight = FontWeight.ExtraBold,
-                            fontSize = 13.sp,
-                            letterSpacing = 0.2.sp
+                            fontWeight = FontWeight.Black,
+                            fontSize = 13.5.sp,
+                            letterSpacing = 0.3.sp
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Sleek "My List" Button
+                // Secondary "My List" Button (Frosted Glass Pill)
                 Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = DarkBlueGrey.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(22.dp),
+                    color = Color.White.copy(alpha = 0.12f),
                     border = BorderStroke(
-                        0.9.dp,
+                        1.dp,
                         if (isSaved) NeonCyan else Color.White.copy(alpha = 0.25f)
                     ),
                     modifier = Modifier
-                        .height(38.dp)
+                        .height(40.dp)
                         .clickable { onToggleWatchlist() }
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 18.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -375,12 +496,13 @@ fun EdgeToEdgeHeroSection(
                             tint = if (isSaved) NeonCyan else Color.White,
                             modifier = Modifier.size(15.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(7.dp))
                         Text(
                             text = if (isSaved) "In List" else "My List",
                             color = if (isSaved) NeonCyan else Color.White,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.sp
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            letterSpacing = 0.2.sp
                         )
                     }
                 }
@@ -399,7 +521,6 @@ fun MovieRowSection(
     val context = LocalContext.current
 
     Column(modifier = modifier.fillMaxWidth()) {
-        // Section Header with proper padding & margins
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -422,7 +543,6 @@ fun MovieRowSection(
             )
         }
 
-        // Ample spacing between title and movie cards
         Spacer(modifier = Modifier.height(14.dp))
 
         LazyRow(
@@ -435,7 +555,6 @@ fun MovieRowSection(
                         .width(125.dp)
                         .clickable { onSelectMovie(movie) }
                 ) {
-                    // Subtle border radius (10dp) on posters
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -453,7 +572,6 @@ fun MovieRowSection(
                             modifier = Modifier.fillMaxSize()
                         )
 
-                        // Rating badge
                         Surface(
                             color = Color.Black.copy(alpha = 0.78f),
                             shape = RoundedCornerShape(4.dp),
