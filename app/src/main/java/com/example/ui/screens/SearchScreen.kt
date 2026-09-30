@@ -76,7 +76,9 @@ fun SearchScreen(
     val context = LocalContext.current
     var query by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("All") }
-    val categories = remember { listOf("All", "Sci-Fi", "Action", "Anime", "Cyberpunk", "4K Ultra") }
+    val categories = remember {
+        listOf("All", "Movies", "Anime", "Drama", "Indian", "Action", "Sci-Fi")
+    }
 
     val filteredMovies = remember(movies, query, selectedCategory) {
         movies.filter { movie ->

@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -18,14 +17,15 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   String _selectedCategory = 'All';
 
+  // Updated Categories: Movies, Anime, Drama, Indian, Action, Sci-Fi
   final List<String> _categories = const [
     'All',
+    'Movies',
+    'Anime',
+    'Drama',
+    'Indian',
     'Action',
     'Sci-Fi',
-    'Anime',
-    'Trending',
-    'Cyberpunk',
-    '4K Ultra',
   ];
 
   @override
@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: const Color(0xFF050508), // Pure OLED Deep Black
       body: movieProvider.isLoading
           ? const _HomeShimmerSkeleton()
           : Stack(
@@ -47,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Scrollable Content
                 RefreshIndicator(
                   color: const Color(0xFF00F0FF),
-                  backgroundColor: const Color(0xFF14141E),
+                  backgroundColor: const Color(0xFF0D0D14),
                   onRefresh: () async {
                     await Future.delayed(const Duration(milliseconds: 600));
                   },
@@ -55,9 +55,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: EdgeInsets.zero,
                     physics: const BouncingScrollPhysics(),
                     children: [
-                      // Full-Bleed Immersive Cinema Hero Section
+                      // Full-Bleed Cinema Hero Header with Neon Edge Glow
                       if (heroMovie != null)
-                        _ImmersiveHeroHeader(
+                        _NeonImmersiveHeroHeader(
                           heroMovie: heroMovie,
                           isSaved: isSaved,
                           onToggleMyList: () {
@@ -76,17 +76,38 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(height: 24),
 
                       // Trending Movies Section
-                      _MovieSectionRow(
+                      _NeonMovieSectionRow(
                         title: 'Trending Worldwide',
+                        accentColor: const Color(0xFF00F0FF),
                         movies: _filterMovies(movies, _selectedCategory),
                       ),
 
                       const SizedBox(height: 32),
 
-                      // New Releases Section
-                      _MovieSectionRow(
-                        title: 'New Releases',
-                        movies: _filterMovies(movies.reversed.toList(), _selectedCategory),
+                      // Indian Blockbusters & Desi Cinema Row
+                      _NeonMovieSectionRow(
+                        title: 'Indian Blockbusters & Desi Cinema',
+                        accentColor: const Color(0xFFFF9900),
+                        movies: _filterMovies(
+                          movies.where((m) => m.category == 'Indian' || m.category == 'Drama').isNotEmpty
+                              ? movies.where((m) => m.category == 'Indian' || m.category == 'Drama').toList()
+                              : movies,
+                          _selectedCategory,
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // Top Anime & Cyberpunk Row
+                      _NeonMovieSectionRow(
+                        title: 'Anime Universe & Animation',
+                        accentColor: const Color(0xFFBD00FF),
+                        movies: _filterMovies(
+                          movies.where((m) => m.category == 'Anime').isNotEmpty
+                              ? movies.where((m) => m.category == 'Anime').toList()
+                              : movies.reversed.toList(),
+                          _selectedCategory,
+                        ),
                       ),
 
                       const SizedBox(height: 100),
@@ -94,12 +115,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-                // Floating Frosted Header (Apple TV / Netflix Style)
+                // Floating Neon Frosted Header
                 Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
-                  child: _FloatingPremiumHeader(
+                  child: _FloatingNeonHeader(
                     categories: _categories,
                     selectedCategory: _selectedCategory,
                     onSelectCategory: (cat) => setState(() => _selectedCategory = cat),
@@ -118,15 +139,15 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 // -------------------------------------------------------------
-// FLOATING FROSTED HEADER (Logo, Actions & Glassmorphic Category Pills)
+// FLOATING NEON HEADER (Clean Logo & Glowing Frosted Category Pills)
 // -------------------------------------------------------------
 
-class _FloatingPremiumHeader extends StatelessWidget {
+class _FloatingNeonHeader extends StatelessWidget {
   final List<String> categories;
   final String selectedCategory;
   final ValueChanged<String> onSelectCategory;
 
-  const _FloatingPremiumHeader({
+  const _FloatingNeonHeader({
     required this.categories,
     required this.selectedCategory,
     required this.onSelectCategory,
@@ -140,11 +161,11 @@ class _FloatingPremiumHeader extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            const Color(0xFF0A0A0F).withValues(alpha: 0.95),
-            const Color(0xFF0A0A0F).withValues(alpha: 0.75),
+            const Color(0xFF050508).withValues(alpha: 0.98),
+            const Color(0xFF050508).withValues(alpha: 0.80),
             Colors.transparent,
           ],
-          stops: const [0.0, 0.6, 1.0],
+          stops: const [0.0, 0.65, 1.0],
         ),
       ),
       child: SafeArea(
@@ -153,18 +174,18 @@ class _FloatingPremiumHeader extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Top Bar: Clean Cinematic Branding + Action Buttons
+            // Top Bar: Glowing Neon Logo + Notification Icon
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Premium Brand Typography (No ugly box outline)
+                  // Luminous Neon StreamX Logo
                   Row(
                     children: [
                       Container(
-                        width: 32,
-                        height: 32,
+                        width: 34,
+                        height: 34,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: const LinearGradient(
@@ -174,16 +195,16 @@ class _FloatingPremiumHeader extends StatelessWidget {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF00F0FF).withValues(alpha: 0.45),
-                              blurRadius: 14,
-                              spreadRadius: 1,
+                              color: const Color(0xFF00F0FF).withValues(alpha: 0.55),
+                              blurRadius: 18,
+                              spreadRadius: 2,
                             ),
                           ],
                         ),
                         child: const Icon(
                           LucideIcons.play,
                           color: Colors.black,
-                          size: 16,
+                          size: 17,
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -194,18 +215,24 @@ class _FloatingPremiumHeader extends StatelessWidget {
                               text: 'STREAM',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 20,
+                                fontSize: 21,
                                 fontWeight: FontWeight.w900,
-                                letterSpacing: 2.0,
+                                letterSpacing: 2.2,
                               ),
                             ),
                             TextSpan(
                               text: 'X',
                               style: TextStyle(
                                 color: Color(0xFF00F0FF),
-                                fontSize: 22,
+                                fontSize: 23,
                                 fontWeight: FontWeight.w900,
-                                letterSpacing: 2.0,
+                                letterSpacing: 2.2,
+                                shadows: [
+                                  Shadow(
+                                    color: Color(0xFF00F0FF),
+                                    blurRadius: 12,
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -214,22 +241,43 @@ class _FloatingPremiumHeader extends StatelessWidget {
                     ],
                   ),
 
-                  // Circular Glass Action Buttons
-                  Row(
-                    children: [
-                      _GlassIconButton(
-                        icon: LucideIcons.bell,
-                        hasBadge: true,
-                        onTap: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Notifications: 4K HDR releases refreshed!'),
-                              backgroundColor: Color(0xFF14141E),
-                            ),
-                          );
-                        },
+                  // Circular Glass Notification Button with Neon Glow
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.08),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        width: 0.8,
                       ),
-                    ],
+                    ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Icon(LucideIcons.bell, color: Colors.white, size: 16),
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFF00F0FF),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0xFF00F0FF),
+                                  blurRadius: 6,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -237,9 +285,9 @@ class _FloatingPremiumHeader extends StatelessWidget {
 
             const SizedBox(height: 6),
 
-            // Ultra-Sleek Frosted Glass Category Pills
+            // Neon Category Pills Row (Movies, Anime, Drama, Indian, Action, Sci-Fi)
             SizedBox(
-              height: 36,
+              height: 38,
               child: ListView.separated(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 scrollDirection: Axis.horizontal,
@@ -252,27 +300,26 @@ class _FloatingPremiumHeader extends StatelessWidget {
 
                   return InkWell(
                     onTap: () => onSelectCategory(cat),
-                    borderRadius: BorderRadius.circular(18),
+                    borderRadius: BorderRadius.circular(20),
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 220),
-                      curve: Curves.easeOutCubic,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? const Color(0xFF00F0FF)
-                            : Colors.black.withValues(alpha: 0.4),
-                        borderRadius: BorderRadius.circular(18),
+                            : Colors.black.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isSelected
                               ? const Color(0xFF00F0FF)
-                              : Colors.white.withValues(alpha: 0.18),
-                          width: isSelected ? 1.2 : 0.8,
+                              : Colors.white.withValues(alpha: 0.20),
+                          width: isSelected ? 1.4 : 0.8,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: const Color(0xFF00F0FF).withValues(alpha: 0.35),
-                                  blurRadius: 12,
+                                  color: const Color(0xFF00F0FF).withValues(alpha: 0.45),
+                                  blurRadius: 14,
                                   offset: const Offset(0, 2),
                                 ),
                               ]
@@ -283,8 +330,8 @@ class _FloatingPremiumHeader extends StatelessWidget {
                           cat,
                           style: TextStyle(
                             color: isSelected ? Colors.black : Colors.white.withValues(alpha: 0.9),
-                            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                            fontSize: 12,
+                            fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                            fontSize: 12.5,
                             letterSpacing: 0.4,
                           ),
                         ),
@@ -303,68 +350,17 @@ class _FloatingPremiumHeader extends StatelessWidget {
   }
 }
 
-class _GlassIconButton extends StatelessWidget {
-  final IconData icon;
-  final bool hasBadge;
-  final VoidCallback onTap;
-
-  const _GlassIconButton({
-    required this.icon,
-    this.hasBadge = false,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(20),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withValues(alpha: 0.1),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15),
-                width: 0.8,
-              ),
-            ),
-            child: Icon(icon, color: Colors.white, size: 16),
-          ),
-          if (hasBadge)
-            Positioned(
-              top: 2,
-              right: 2,
-              child: Container(
-                width: 7,
-                height: 7,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Color(0xFF00F0FF),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
 // -------------------------------------------------------------
-// IMMERSIVE FULL-BLEED HERO SECTION (Apple TV / Netflix Style)
+// IMMERSIVE FULL-BLEED HERO SECTION WITH NEON AURA
 // -------------------------------------------------------------
 
-class _ImmersiveHeroHeader extends StatelessWidget {
+class _NeonImmersiveHeroHeader extends StatelessWidget {
   final MovieItem heroMovie;
   final bool isSaved;
   final VoidCallback onToggleMyList;
   final VoidCallback onPlay;
 
-  const _ImmersiveHeroHeader({
+  const _NeonImmersiveHeroHeader({
     required this.heroMovie,
     required this.isSaved,
     required this.onToggleMyList,
@@ -374,7 +370,7 @@ class _ImmersiveHeroHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final heroHeight = (screenHeight * 0.62).clamp(480.0, 560.0);
+    final heroHeight = (screenHeight * 0.64).clamp(500.0, 580.0);
 
     return SizedBox(
       height: heroHeight,
@@ -382,38 +378,38 @@ class _ImmersiveHeroHeader extends StatelessWidget {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          // Edge-to-Edge Full-Bleed Artwork
+          // Edge-to-Edge Poster Image
           CachedNetworkImage(
             imageUrl: heroMovie.bannerUrl,
             fit: BoxFit.cover,
             alignment: Alignment.topCenter,
-            placeholder: (context, url) => Container(color: const Color(0xFF14141E)),
+            placeholder: (context, url) => Container(color: const Color(0xFF0D0D14)),
             errorWidget: (context, url, error) => Container(
-              color: const Color(0xFF14141E),
+              color: const Color(0xFF0D0D14),
               child: const Icon(LucideIcons.film, color: Colors.white24, size: 48),
             ),
           ),
 
-          // Multi-layer Cinema Vignettes (Seamless bottom transition into 0xFF0A0A0F)
+          // Multi-layer Cinema Vignette with bottom fade into 0xFF050508
           DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xFF0A0A0F).withValues(alpha: 0.7),
+                  const Color(0xFF050508).withValues(alpha: 0.75),
                   Colors.transparent,
                   Colors.transparent,
-                  const Color(0xFF0A0A0F).withValues(alpha: 0.5),
-                  const Color(0xFF0A0A0F).withValues(alpha: 0.9),
-                  const Color(0xFF0A0A0F),
+                  const Color(0xFF050508).withValues(alpha: 0.45),
+                  const Color(0xFF050508).withValues(alpha: 0.88),
+                  const Color(0xFF050508),
                 ],
-                stops: const [0.0, 0.22, 0.45, 0.70, 0.88, 1.0],
+                stops: const [0.0, 0.20, 0.45, 0.68, 0.86, 1.0],
               ),
             ),
           ),
 
-          // Bottom Content: Badges, Title, Metadata & Sleek Action Buttons
+          // Bottom Content: Badges, Title, Badges, and Neon Play/List Buttons
           Positioned(
             left: 20,
             right: 20,
@@ -422,31 +418,37 @@ class _ImmersiveHeroHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Cinema Series / Feature Badge
+                // Glowing Neon Tag
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3.5),
                       decoration: BoxDecoration(
                         color: const Color(0xFF00F0FF).withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(6),
                         border: Border.all(
                           color: const Color(0xFF00F0FF).withValues(alpha: 0.8),
-                          width: 0.8,
+                          width: 1.0,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF00F0FF).withValues(alpha: 0.25),
+                            blurRadius: 10,
+                          ),
+                        ],
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(LucideIcons.sparkles, color: Color(0xFF00F0FF), size: 10),
-                          const SizedBox(width: 4),
+                          const Icon(LucideIcons.sparkles, color: Color(0xFF00F0FF), size: 11),
+                          const SizedBox(width: 5),
                           Text(
-                            'STREAMX ORIGINAL · ${heroMovie.category.toUpperCase()}',
+                            'STREAMX EXCLUSIVE · ${heroMovie.category.toUpperCase()}',
                             style: const TextStyle(
                               color: Color(0xFF00F0FF),
-                              fontWeight: FontWeight.w800,
-                              fontSize: 9.5,
-                              letterSpacing: 1.2,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 10,
+                              letterSpacing: 1.4,
                             ),
                           ),
                         ],
@@ -456,19 +458,19 @@ class _ImmersiveHeroHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
 
-                // Main Cinematic Title
+                // Bold Cinematic Title
                 Text(
                   heroMovie.title,
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 28,
+                    fontSize: 29,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
+                    letterSpacing: -0.4,
                     height: 1.12,
                     shadows: [
                       Shadow(
-                        color: Colors.black87,
-                        blurRadius: 18,
+                        color: Colors.black,
+                        blurRadius: 20,
                         offset: Offset(0, 4),
                       ),
                     ],
@@ -478,49 +480,51 @@ class _ImmersiveHeroHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
 
-                // Metadata Details: Rating, Year, 4K HDR, Dolby
+                // Metadata Details: Rating, Badges, Year
                 Row(
                   children: [
-                    const Icon(LucideIcons.star, color: Color(0xFFFFB800), size: 13),
+                    const Icon(LucideIcons.star, color: Color(0xFFFFB800), size: 14),
                     const SizedBox(width: 4),
                     Text(
                       '${heroMovie.rating}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(width: 10),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(3),
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 0.6),
                       ),
                       child: const Text(
                         '4K ULTRA HD',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 9,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: 0.6,
                         ),
                       ),
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(3),
+                        color: Colors.white.withValues(alpha: 0.16),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 0.6),
                       ),
                       child: const Text(
                         'DOLBY ATMOS',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 9,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                           letterSpacing: 0.6,
                         ),
                       ),
@@ -529,8 +533,8 @@ class _ImmersiveHeroHeader extends StatelessWidget {
                     Text(
                       '${heroMovie.releaseYear}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.6),
-                        fontSize: 11.5,
+                        color: Colors.white.withValues(alpha: 0.65),
+                        fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -542,11 +546,11 @@ class _ImmersiveHeroHeader extends StatelessWidget {
                 Text(
                   heroMovie.description,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.72),
-                    fontSize: 12,
+                    color: Colors.white.withValues(alpha: 0.75),
+                    fontSize: 12.5,
                     height: 1.35,
                     shadows: const [
-                      Shadow(color: Colors.black54, blurRadius: 10),
+                      Shadow(color: Colors.black87, blurRadius: 10),
                     ],
                   ),
                   maxLines: 2,
@@ -554,41 +558,45 @@ class _ImmersiveHeroHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // Sleek, Minimalist Action Buttons (Apple TV / Netflix Style)
+                // Glowing Neon Buttons
                 Row(
                   children: [
-                    // Primary Play Button: Crisp, elegant white pill with black icon & text
+                    // Play Now: Radiant Neon Cyan Gradient Button
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: onPlay,
                         borderRadius: BorderRadius.circular(22),
                         child: Ink(
-                          height: 40,
-                          padding: const EdgeInsets.symmetric(horizontal: 22),
+                          height: 42,
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
                           decoration: BoxDecoration(
-                            color: Colors.white,
                             borderRadius: BorderRadius.circular(22),
+                            gradient: const LinearGradient(
+                              colors: [Color(0xFF00F0FF), Color(0xFF0088FF)],
+                              begin: Alignment.centerLeft,
+                              end: Alignment.centerRight,
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.white.withValues(alpha: 0.25),
-                                blurRadius: 14,
-                                offset: const Offset(0, 3),
+                                color: const Color(0xFF00F0FF).withValues(alpha: 0.5),
+                                blurRadius: 18,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(LucideIcons.play, color: Colors.black, size: 16),
+                              Icon(LucideIcons.play, color: Colors.black, size: 17),
                               SizedBox(width: 8),
                               Text(
-                                'Play Now',
+                                'Watch Now',
                                 style: TextStyle(
                                   color: Colors.black,
                                   fontWeight: FontWeight.w900,
-                                  fontSize: 13.5,
-                                  letterSpacing: 0.3,
+                                  fontSize: 14,
+                                  letterSpacing: 0.4,
                                 ),
                               ),
                             ],
@@ -596,26 +604,34 @@ class _ImmersiveHeroHeader extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 14),
 
-                    // Secondary My List Button: Frosted Glass Pill
+                    // My List: Frosted Black Pill with Glowing Border
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
                         onTap: onToggleMyList,
                         borderRadius: BorderRadius.circular(22),
                         child: Container(
-                          height: 40,
+                          height: 42,
                           padding: const EdgeInsets.symmetric(horizontal: 18),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.12),
+                            color: Colors.black.withValues(alpha: 0.55),
                             borderRadius: BorderRadius.circular(22),
                             border: Border.all(
                               color: isSaved
                                   ? const Color(0xFF00F0FF)
-                                  : Colors.white.withValues(alpha: 0.25),
-                              width: 1.0,
+                                  : Colors.white.withValues(alpha: 0.28),
+                              width: isSaved ? 1.4 : 1.0,
                             ),
+                            boxShadow: isSaved
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFF00F0FF).withValues(alpha: 0.35),
+                                      blurRadius: 12,
+                                    ),
+                                  ]
+                                : null,
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -623,7 +639,7 @@ class _ImmersiveHeroHeader extends StatelessWidget {
                               Icon(
                                 isSaved ? LucideIcons.check : LucideIcons.plus,
                                 color: isSaved ? const Color(0xFF00F0FF) : Colors.white,
-                                size: 15,
+                                size: 16,
                               ),
                               const SizedBox(width: 7),
                               Text(
@@ -652,15 +668,17 @@ class _ImmersiveHeroHeader extends StatelessWidget {
 }
 
 // -------------------------------------------------------------
-// CLEANER ROWS: MOVIE SECTION
+// NEON MOVIE SECTION ROW
 // -------------------------------------------------------------
 
-class _MovieSectionRow extends StatelessWidget {
+class _NeonMovieSectionRow extends StatelessWidget {
   final String title;
+  final Color accentColor;
   final List<MovieItem> movies;
 
-  const _MovieSectionRow({
+  const _NeonMovieSectionRow({
     required this.title,
+    required this.accentColor,
     required this.movies,
   });
 
@@ -669,28 +687,48 @@ class _MovieSectionRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Header with proper typography and spacing
+        // Section Header with Neon Accent Strip
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.3,
-                ),
+              Row(
+                children: [
+                  Container(
+                    width: 3.5,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: accentColor,
+                      borderRadius: BorderRadius.circular(2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: accentColor.withValues(alpha: 0.6),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
               ),
-              const Text(
+              Text(
                 'See All',
                 style: TextStyle(
-                  color: Color(0xFF00F0FF),
+                  color: accentColor,
                   fontSize: 12,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],
@@ -698,7 +736,7 @@ class _MovieSectionRow extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         SizedBox(
-          height: 205,
+          height: 210,
           child: ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             scrollDirection: Axis.horizontal,
@@ -708,7 +746,7 @@ class _MovieSectionRow extends StatelessWidget {
             itemBuilder: (context, index) {
               final movie = movies[index];
               return SizedBox(
-                width: 125,
+                width: 128,
                 child: InkWell(
                   onTap: () {
                     Navigator.push(
@@ -718,18 +756,18 @@ class _MovieSectionRow extends StatelessWidget {
                       ),
                     );
                   },
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Poster Image with subtle border radius
+                      // Poster with subtle neon border
                       Expanded(
                         child: Container(
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: const Color(0xFF1E1E2C),
-                              width: 0.8,
+                              width: 0.9,
                             ),
                           ),
                           clipBehavior: Clip.antiAlias,
@@ -739,9 +777,9 @@ class _MovieSectionRow extends StatelessWidget {
                               CachedNetworkImage(
                                 imageUrl: movie.posterUrl,
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => Container(color: const Color(0xFF14141E)),
+                                placeholder: (context, url) => Container(color: const Color(0xFF0D0D14)),
                                 errorWidget: (context, url, error) => Container(
-                                  color: const Color(0xFF14141E),
+                                  color: const Color(0xFF0D0D14),
                                   child: const Icon(LucideIcons.film, color: Colors.white24),
                                 ),
                               ),
@@ -751,8 +789,12 @@ class _MovieSectionRow extends StatelessWidget {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.78),
+                                    color: Colors.black.withValues(alpha: 0.82),
                                     borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.15),
+                                      width: 0.5,
+                                    ),
                                   ),
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
@@ -775,13 +817,13 @@ class _MovieSectionRow extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 8),
                       Text(
                         movie.title,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -816,13 +858,13 @@ class _HomeShimmerSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Shimmer.fromColors(
-      baseColor: const Color(0xFF14141E),
-      highlightColor: const Color(0xFF242436),
+      baseColor: const Color(0xFF0D0D14),
+      highlightColor: const Color(0xFF1E1E2C),
       child: ListView(
         padding: EdgeInsets.zero,
         children: [
           Container(
-            height: 480,
+            height: 500,
             width: double.infinity,
             color: Colors.white,
           ),

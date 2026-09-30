@@ -69,7 +69,7 @@ fun HomeScreen(
 ) {
     var selectedCategory by remember { mutableStateOf("All") }
     val categories = remember {
-        listOf("All", "Action", "Sci-Fi", "Anime", "Cyberpunk", "Trending", "4K Ultra")
+        listOf("All", "Movies", "Anime", "Drama", "Indian", "Action", "Sci-Fi")
     }
 
     val heroMovie = movies.firstOrNull()
@@ -103,21 +103,36 @@ fun HomeScreen(
                 }
             }
 
-            // Cleaner Rows: Trending Worldwide
+            // Trending Worldwide Section
             item {
                 MovieRowSection(
                     title = "Trending Worldwide",
+                    accentColor = NeonCyan,
                     movies = filteredMovies,
                     onSelectMovie = onSelectMovie
                 )
                 Spacer(modifier = Modifier.height(30.dp))
             }
 
-            // Cleaner Rows: New Releases
+            // Indian Blockbusters & Desi Cinema Section
             item {
+                val indianMovies = movies.filter { it.category.equals("Indian", ignoreCase = true) || it.category.equals("Drama", ignoreCase = true) }
                 MovieRowSection(
-                    title = "New Releases",
-                    movies = filteredMovies.reversed(),
+                    title = "Indian Blockbusters & Desi Cinema",
+                    accentColor = Color(0xFFFF9900),
+                    movies = if (selectedCategory == "All") (indianMovies.ifEmpty { movies }) else filteredMovies,
+                    onSelectMovie = onSelectMovie
+                )
+                Spacer(modifier = Modifier.height(30.dp))
+            }
+
+            // Anime Universe & Animation Section
+            item {
+                val animeMovies = movies.filter { it.category.equals("Anime", ignoreCase = true) }
+                MovieRowSection(
+                    title = "Anime Universe & Animation",
+                    accentColor = Color(0xFFBD00FF),
+                    movies = if (selectedCategory == "All") (animeMovies.ifEmpty { movies.reversed() }) else filteredMovies,
                     onSelectMovie = onSelectMovie
                 )
             }
@@ -514,6 +529,7 @@ fun ImmersiveHeroSection(
 @Composable
 fun MovieRowSection(
     title: String,
+    accentColor: Color = NeonCyan,
     movies: List<MovieItem>,
     onSelectMovie: (MovieItem) -> Unit,
     modifier: Modifier = Modifier,
@@ -528,16 +544,25 @@ fun MovieRowSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = title,
-                color = Color.White,
-                fontSize = 17.sp,
-                fontWeight = FontWeight.ExtraBold,
-                letterSpacing = 0.3.sp
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 3.5.dp, height = 16.dp)
+                        .shadow(8.dp, RoundedCornerShape(2.dp), spotColor = accentColor)
+                        .background(accentColor, RoundedCornerShape(2.dp))
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = title,
+                    color = Color.White,
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 0.3.sp
+                )
+            }
             Text(
                 text = "See All",
-                color = NeonCyan,
+                color = accentColor,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold
             )

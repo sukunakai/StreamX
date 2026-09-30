@@ -343,6 +343,52 @@ class MovieCatalogProvider extends ChangeNotifier {
   void _loadSeedData() {
     _movies = [
       MovieItem(
+        id: 'streamx_indian_1',
+        title: 'RRR: Rise of the Revolution',
+        description: 'Two legendary revolutionaries embark on an epic fight against ruthless colonial rulers in an electrifying, action-packed spectacle.',
+        posterUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?w=800&auto=format&fit=crop&q=80',
+        bannerUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?w=1200&auto=format&fit=crop&q=80',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        category: 'Indian',
+        rating: 9.8,
+        releaseYear: 2025,
+        seasonsCount: 1,
+        episodes: const [
+          EpisodeItem(episodeNumber: 1, title: 'The Fire Within', duration: '182m', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'),
+        ],
+      ),
+      MovieItem(
+        id: 'streamx_indian_2',
+        title: 'Cyber Mirzapur: King of Underworld',
+        description: 'Rule, power, and high-stakes revenge collide in the ruthless digital crime syndicate of Uttar Pradesh.',
+        posterUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&auto=format&fit=crop&q=80',
+        bannerUrl: 'https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=1200&auto=format&fit=crop&q=80',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
+        category: 'Drama',
+        rating: 9.4,
+        releaseYear: 2026,
+        seasonsCount: 3,
+        episodes: const [
+          EpisodeItem(episodeNumber: 1, title: 'Kahin Ka Badla', duration: '52m', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4'),
+          EpisodeItem(episodeNumber: 2, title: 'Bhaukaal Reloaded', duration: '56m', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
+        ],
+      ),
+      MovieItem(
+        id: 'streamx_movie_1',
+        title: 'Oppenheimer: The Atomic Core',
+        description: 'The pulse-pounding true paradox of the enigmatic man who risked destroying the world in order to save it.',
+        posterUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?w=800&auto=format&fit=crop&q=80',
+        bannerUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&auto=format&fit=crop&q=80',
+        videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
+        category: 'Movies',
+        rating: 9.6,
+        releaseYear: 2025,
+        seasonsCount: 1,
+        episodes: const [
+          EpisodeItem(episodeNumber: 1, title: 'Trinity Test', duration: '180m', videoUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4'),
+        ],
+      ),
+      MovieItem(
         id: 'streamx_1',
         title: 'Cyberpulse: Neo Tokyo',
         description: 'In 2099, an underground neon synthesis hacker discovers a rogue neural core threatening the mega-metropolis.',

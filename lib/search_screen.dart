@@ -22,11 +22,12 @@ class _SearchScreenState extends State<SearchScreen> {
 
   final List<String> _categories = const [
     'All',
-    'Sci-Fi',
-    'Action',
+    'Movies',
     'Anime',
-    'Cyberpunk',
-    '4K Ultra',
+    'Drama',
+    'Indian',
+    'Action',
+    'Sci-Fi',
   ];
 
   @override
