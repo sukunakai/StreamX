@@ -1,0 +1,6 @@
+{
+  "name": "StreamX",
+  "description": "Hyper-premium video streaming platform with pro gesture video player, offline vault, and creator studio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
